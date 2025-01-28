@@ -15,19 +15,19 @@
 		to_chat(burrower, span_warning("Couldn't burrow anywhere near the target!"))
 		if(burrower.ai_controller?.ai_status == AI_STATUS_ON)
 			//this is a valid reason to give up on a target
-			burrower.ai_controller.blackboard[BB_BASIC_MOB_CURRENT_TARGET] = null
+			burrower.ai_controller.clear_blackboard_key(BB_BASIC_MOB_CURRENT_TARGET)
 		return
 	playsound(burrower, 'sound/effects/break_stone.ogg', 50, TRUE)
 	new /obj/effect/temp_visual/mook_dust(get_turf(burrower))
-	burrower.status_flags |= GODMODE
-	burrower.invisibility = INVISIBILITY_MAXIMUM
+	ADD_TRAIT(burrower, TRAIT_GODMODE, REF(src))
+	burrower.SetInvisibility(INVISIBILITY_MAXIMUM, id=type)
 	burrower.forceMove(unburrow_turf)
 	//not that it's gonna die with godmode but still
-	SLEEP_CHECK_DEATH(rand(0.75 SECONDS, 1.25 SECONDS), burrower)
+	SLEEP_CHECK_DEATH(rand(0.7 SECONDS, 1.2 SECONDS), burrower)
 	playsound(burrower, 'sound/effects/break_stone.ogg', 50, TRUE)
 	new /obj/effect/temp_visual/mook_dust(unburrow_turf)
-	burrower.status_flags &= ~GODMODE
-	burrower.invisibility = 0
+	REMOVE_TRAIT(burrower, TRAIT_GODMODE, REF(src))
+	burrower.RemoveInvisibility(type)
 
 /datum/action/cooldown/mob_cooldown/resurface/proc/get_unburrow_turf(mob/living/burrower, atom/target)
 	//we want the worm to try guaranteeing a hit on a living target if it thinks it can
@@ -53,7 +53,7 @@
 	name = "Spew Bile"
 	desc = "Spews bile everywhere. Must resurface after use to refresh."
 	projectile_type = /obj/projectile/bileworm_acid
-	projectile_sound = 'sound/creatures/bileworm/bileworm_spit.ogg'
+	projectile_sound = 'sound/mobs/non-humanoids/bileworm/bileworm_spit.ogg'
 	shared_cooldown = MOB_SHARED_COOLDOWN_1 | MOB_SHARED_COOLDOWN_2
 
 /datum/action/cooldown/mob_cooldown/projectile_attack/dir_shots/bileworm/Activate(atom/target_atom)
@@ -70,14 +70,18 @@
 /obj/projectile/bileworm_acid
 	name = "acidic bile"
 	icon_state = "neurotoxin"
-	hitsound = 'sound/weapons/sear.ogg'
+	hitsound = 'sound/items/weapons/sear.ogg'
 	damage = 20
-	speed = 2
+	speed = 0.5
 	range = 20
 	jitter = 3 SECONDS
 	stutter = 3 SECONDS
 	damage_type = BURN
 	pass_flags = PASSTABLE
+
+/obj/projectile/bileworm_acid/Initialize(mapload)
+	. = ..()
+	AddComponent(/datum/component/parriable_projectile)
 
 /datum/action/cooldown/mob_cooldown/devour
 	name = "Devour"
@@ -104,21 +108,21 @@
 		return //this will give up on devouring the target which is fine by me
 	playsound(devourer, 'sound/effects/break_stone.ogg', 50, TRUE)
 	new /obj/effect/temp_visual/mook_dust(get_turf(devourer))
-	devourer.status_flags |= GODMODE
-	devourer.invisibility = INVISIBILITY_MAXIMUM
+	ADD_TRAIT(devourer, TRAIT_GODMODE, REF(src))
+	devourer.SetInvisibility(INVISIBILITY_MAXIMUM, id=type)
 	devourer.forceMove(devour_turf)
 	//not that it's gonna die with godmode but still
-	SLEEP_CHECK_DEATH(rand(0.75 SECONDS, 1.25 SECONDS), devourer)
+	SLEEP_CHECK_DEATH(rand(0.7 SECONDS, 1.2 SECONDS), devourer)
 	playsound(devourer, 'sound/effects/break_stone.ogg', 50, TRUE)
 	new /obj/effect/temp_visual/mook_dust(devour_turf)
-	devourer.status_flags &= ~GODMODE
-	devourer.invisibility = 0
+	REMOVE_TRAIT(devourer, TRAIT_GODMODE, REF(src))
+	devourer.RemoveInvisibility(type)
 	if(!(target in devour_turf))
 		to_chat(devourer, span_warning("Someone stole your dinner!"))
 		return
 	to_chat(target, span_userdanger("You are consumed by [devourer]!"))
-	devourer.visible_message("[devourer] consumes [target]!")
+	devourer.visible_message(span_warning("[devourer] consumes [target]!"))
 	devourer.fully_heal()
 	playsound(devourer, 'sound/effects/splat.ogg', 50, TRUE)
-	//to be recieved on death
+	//to be received on death
 	target.forceMove(devourer)

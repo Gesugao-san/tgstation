@@ -20,7 +20,7 @@
 	severity = 4
 	var/yawning = FALSE
 	threshold_descs = list(
-		"Transmission 4" = "Causes the host to periodically emit a yawn that spreads the virus in a manner similar to that of a sneeze.",
+		"Transmission 4" = "Causes the host to periodically emit a yawn that tries to infect bystanders within 6 meters of the host.",
 		"Stage Speed 10" = "Causes narcolepsy more often, increasing the chance of the host falling asleep.",
 	)
 
@@ -35,6 +35,10 @@
 		symptom_delay_max = 45
 
 /datum/symptom/narcolepsy/Activate(datum/disease/advance/A)
+	. = ..()
+	if(!.)
+		return
+
 	var/mob/living/M = A.affected_mob
 	switch(A.stage)
 		if(1)
@@ -60,8 +64,7 @@
 
 			if(yawning)
 				M.emote("yawn")
-				if(M.CanSpreadAirborneDisease())
-					A.spread(6)
+				A.airborne_spread(6)
 
 		if(5)
 			if(prob(50))
@@ -71,5 +74,4 @@
 
 			if(yawning)
 				M.emote("yawn")
-				if(M.CanSpreadAirborneDisease())
-					A.spread(6)
+				A.airborne_spread(6)

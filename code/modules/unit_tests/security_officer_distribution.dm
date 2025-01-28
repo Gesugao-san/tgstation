@@ -68,7 +68,7 @@
 
 	var/mob/living/carbon/human/new_character = allocate(/mob/living/carbon/human/consistent)
 	new_character.mind_initialize()
-	new_character.mind.set_assigned_role(SSjob.GetJobType(/datum/job/security_officer))
+	new_character.mind.set_assigned_role(SSjob.get_job_type(/datum/job/security_officer))
 
 	new_player.new_character = new_character
 	new_player.mock_client = mock_client
@@ -108,3 +108,4 @@
 	test("a", list("a", "a", "b", "b", "c", "c", "d", "d"), "a")
 
 #undef SECURITY_OFFICER_DEPARTMENTS
+#undef SECURITY_OFFICER_DEPARTMENTS_TO_NAMES

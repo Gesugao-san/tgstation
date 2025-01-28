@@ -36,7 +36,7 @@
 /datum/supply_pack/security/forensics
 	name = "Forensics Crate"
 	desc = "Stay hot on the criminal's heels with Nanotrasen's Detective Essentials™. \
-		Contains a forensics scanner, six evidence bags, camera, tape recorder, white crayon, \
+		Contains a forensics scanner, six evidence bags, camera, special board for evidences, tape recorder, stick of chalk, \
 		and of course, a fedora."
 	cost = CARGO_CRATE_VALUE * 2.5
 	access_view = ACCESS_MORGUE
@@ -46,6 +46,7 @@
 					/obj/item/taperecorder,
 					/obj/item/toy/crayon/white,
 					/obj/item/clothing/head/fedora/det_hat,
+					/obj/item/wallframe/detectiveboard
 				)
 	crate_name = "forensics crate"
 
@@ -140,6 +141,7 @@
 					/obj/item/clothing/mask/gas/sechailer,
 				)
 	crate_name = "security clothing crate"
+	discountable = SUPPLY_PACK_RARE_DISCOUNTABLE
 
 /datum/supply_pack/security/baton
 	name = "Stun Batons Crate"
@@ -168,6 +170,8 @@
 					/obj/item/clothing/mask/whistle,
 					/obj/item/conversion_kit,
 				)
+	crate_name = "traditional equipment crate"
+	discountable = SUPPLY_PACK_RARE_DISCOUNTABLE
 
 /// Armory packs
 
@@ -211,9 +215,12 @@
 /datum/supply_pack/security/armory/dragnet
 	name = "DRAGnet Crate"
 	desc = "Contains three \"Dynamic Rapid-Apprehension of the Guilty\" netting devices, \
-		a recent breakthrough in law enforcement prisoner management technology."
+		a recent breakthrough in law enforcement prisoner management technology. Includes a DRAGnet beacon."
 	cost = CARGO_CRATE_VALUE * 5
-	contains = list(/obj/item/gun/energy/e_gun/dragnet = 3)
+	contains = list(
+		/obj/item/gun/energy/e_gun/dragnet = 3,
+		/obj/item/dragnet_beacon = 1
+	)
 	crate_name = "\improper DRAGnet crate"
 
 /datum/supply_pack/security/armory/energy
@@ -224,6 +231,46 @@
 	contains = list(/obj/item/gun/energy/e_gun = 2)
 	crate_name = "energy gun crate"
 	crate_type = /obj/structure/closet/crate/secure/plasma
+
+/datum/supply_pack/security/armory/laser_carbine
+	name = "Laser Carbine Crate"
+	desc = "Contains three laser carbines, capable of rapidly firing weak lasers."
+	cost = CARGO_CRATE_VALUE * 9
+	contains = list(/obj/item/gun/energy/laser/carbine = 3)
+	crate_name = "laser carbine crate"
+	crate_type = /obj/structure/closet/crate/secure/plasma
+
+/datum/supply_pack/security/armory/disabler_smg
+	name = "Disabler SMG Crate"
+	desc = "Contains three disabler SMGs, capable of rapidly firing weak disabler beams."
+	cost = CARGO_CRATE_VALUE * 7
+	contains = list(/obj/item/gun/energy/disabler/smg = 3)
+	crate_name = "disabler smg crate"
+	crate_type = /obj/structure/closet/crate/secure/plasma
+
+/datum/supply_pack/security/armory/battle_rifle
+	name = "NT BR-38 Crate"
+	desc = "An experimental energy-based ballistic battle rifle. Only available to \
+		Nanotrasen stations for security purposes. DO NOT RESELL TO OUTSIDE COMPANIES. \
+		Contains three NT BR-38 rifles and three magazines containing .38 Standard."
+	cost = CARGO_CRATE_VALUE * 100
+	contains = list(
+		/obj/item/gun/ballistic/automatic/battle_rifle = 2,
+		/obj/item/ammo_box/magazine/m38 = 4,
+	)
+	crate_name = "battle rifle crate"
+
+/datum/supply_pack/security/armory/br_mag
+	name = "NT BR-38 Magazine Crate"
+	desc = "Six .38 magazines, able to fit into the NT BR-38. Contains \
+		two standard magazines, two Hot Shot magazines and two Iceblox magazines."
+	cost = CARGO_CRATE_VALUE * 7
+	contains = list(
+		/obj/item/ammo_box/magazine/m38 = 2,
+		/obj/item/ammo_box/magazine/m38/hotshot = 2,
+		/obj/item/ammo_box/magazine/m38/iceblox =2,
+	)
+	crate_name = ".38 magazine crate"
 
 /datum/supply_pack/security/armory/exileimp
 	name = "Exile Implants Crate"
@@ -295,40 +342,11 @@
 	contains = list(/obj/item/shield/riot = 3)
 	crate_name = "riot shields crate"
 
-/datum/supply_pack/security/armory/russian
-	name = "Russian Surplus Crate"
-	desc = "Hello Comrade, we have the most modern russian military equipment the \
-		black market can offer, for the right price of course. Sadly we couldn't remove \
-		the lock, so it"
-	cost = CARGO_CRATE_VALUE * 12
-	contraband = TRUE
-	contains = list(/obj/item/food/rationpack,
-					/obj/item/ammo_box/a762,
-					/obj/item/storage/toolbox/ammo,
-					/obj/item/storage/toolbox/maint_kit,
-					/obj/item/clothing/suit/armor/vest/russian,
-					/obj/item/clothing/head/helmet/rus_helmet,
-					/obj/item/clothing/shoes/russian,
-					/obj/item/clothing/gloves/tackler/combat,
-					/obj/item/clothing/under/syndicate/rus_army,
-					/obj/item/clothing/under/costume/soviet,
-					/obj/item/clothing/mask/russian_balaclava,
-					/obj/item/clothing/head/helmet/rus_ushanka,
-					/obj/item/clothing/suit/armor/vest/russian_coat,
-					/obj/item/gun/ballistic/rifle/boltaction = 2,
-				)
-	crate_name = "surplus military crate"
-
-/datum/supply_pack/security/armory/russian/fill(obj/structure/closet/crate/C)
-	for(var/i in 1 to 10)
-		var/item = pick(contains)
-		new item(C)
-
 /datum/supply_pack/security/armory/swat
 	name = "SWAT Crate"
 	desc = "Contains two fullbody sets of tough, fireproof suits designed in a joint \
 		effort by IS-ERI and Nanotrasen. Each set contains a suit, helmet, mask, combat belt, \
-		and combat gloves."
+		and gorilla gloves."
 	cost = CARGO_CRATE_VALUE * 7
 	contains = list(/obj/item/clothing/head/helmet/swat/nanotrasen = 2,
 					/obj/item/clothing/suit/armor/swat = 2,
@@ -341,30 +359,15 @@
 /datum/supply_pack/security/armory/thermal
 	name = "Thermal Pistol Crate"
 	desc = "Contains a pair of holsters each with two experimental thermal pistols, \
-		using nanites as the basis for their ammo."
-	cost = CARGO_CRATE_VALUE * 7
+		using nanites as the basis for their ammo. Can be shaken to reload."
+	cost = CARGO_CRATE_VALUE * 10
 	contains = list(/obj/item/storage/belt/holster/energy/thermal = 2)
 	crate_name = "thermal pistol crate"
 
-/datum/supply_pack/security/armory/wt550
-	name = "Recalled Weapon Pack"
-	desc = "Contains a set of old Nanotrasen brand autorifles recalled due to choking hazard."
-	cost = CARGO_CRATE_VALUE * 7
-	hidden = TRUE
-	contains = list(
-		/obj/item/gun/ballistic/automatic/wt550 = 2,
-		/obj/item/ammo_box/magazine/wt550m9 = 2,
-	)
-	crate_name = "Recalled rifle crate"
-
-/datum/supply_pack/security/armory/wt550ammo
-	name = "Recalled Ammo Pack"
-	desc = "Contains four 20-round magazine for the Recalled WT-550 Auto Rifle. \
-	Each magazine is designed to facilitate rapid tactical reloads. Recalled due to Security demands."
-	cost = CARGO_CRATE_VALUE * 4
-	hidden = TRUE
-	contains = list(
-		/obj/item/ammo_box/magazine/wt550m9 = 4,
-	)
-	crate_name = "Ammo box"
-
+/datum/supply_pack/security/sunglasses
+	name = "Sunglasses Crate"
+	desc = "A single pair of flash-proof sunglasses."
+	cost = CARGO_CRATE_VALUE * 2
+	access_view = ACCESS_SECURITY
+	contains = list(/obj/item/clothing/glasses/sunglasses = 1)
+	crate_name = "sunglasses crate"

@@ -9,11 +9,13 @@
 /obj/item/melee/powerfist
 	name = "power-fist"
 	desc = "A metal gauntlet with a piston-powered ram ontop for that extra 'ompfh' in your punch."
+	icon = 'icons/obj/antags/syndicate_tools.dmi'
 	icon_state = "powerfist"
 	inhand_icon_state = "powerfist"
+	icon_angle = 180
 	lefthand_file = 'icons/mob/inhands/weapons/melee_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/weapons/melee_righthand.dmi'
-	flags_1 = CONDUCT_1
+	obj_flags = CONDUCTS_ELECTRICITY
 	attack_verb_continuous = list("whacks", "fists", "power-punches")
 	attack_verb_simple = list("whack", "fist", "power-punch")
 	force = 20
@@ -35,6 +37,17 @@
 	fire = 100
 	acid = 40
 
+/obj/item/melee/powerfist/proc/pressure_setting_to_text(fist_pressure_setting)
+	switch(fist_pressure_setting)
+		if(LOW_PRESSURE)
+			return "low"
+		if(MID_PRESSURE)
+			return "medium"
+		if(HIGH_PRESSURE)
+			return "high"
+		else
+			CRASH("Invalid pressure setting: [fist_pressure_setting]!")
+
 /obj/item/melee/powerfist/examine(mob/user)
 	. = ..()
 	if(!in_range(user, src))
@@ -42,14 +55,14 @@
 		return
 	if(tank)
 		. += span_notice("[icon2html(tank, user)] It has \a [tank] mounted onto it.")
-		. += span_notice("Can be removed with a screwdriver.")
+		. += span_notice("Can be removed with a <b>screwdriver</b>.")
 
-	. += span_notice("Use a wrench to change the valve strength. Current strength at [fist_pressure_setting].")
+	. += span_notice("Use a <b>wrench</b> to change the valve strength. Current strength is at <b>[pressure_setting_to_text(fist_pressure_setting)]</b> level.")
 
 /obj/item/melee/powerfist/wrench_act(mob/living/user, obj/item/tool)
 	fist_pressure_setting = fist_pressure_setting >= HIGH_PRESSURE ? LOW_PRESSURE : fist_pressure_setting + 1
 	tool.play_tool_sound(src)
-	balloon_alert(user, "piston strength set to [fist_pressure_setting]")
+	balloon_alert(user, "piston strength set to [pressure_setting_to_text(fist_pressure_setting)]")
 	return TRUE
 
 /obj/item/melee/powerfist/screwdriver_act(mob/living/user, obj/item/tool)
@@ -105,7 +118,7 @@
 	if(!gas_used)
 		to_chat(user, span_warning("\The [src]'s tank is empty!"))
 		target.apply_damage((force / 5), BRUTE)
-		playsound(loc, 'sound/weapons/punch1.ogg', 50, TRUE)
+		playsound(loc, 'sound/items/weapons/punch1.ogg', 50, TRUE)
 		target.visible_message(span_danger("[user]'s powerfist lets out a dull thunk as [user.p_they()] punch[user.p_es()] [target.name]!"), \
 			span_userdanger("[user]'s punches you!"))
 		return
@@ -113,7 +126,7 @@
 	if(!molar_cmp_equals(gas_used.total_moles(), gas_per_fist * fist_pressure_setting))
 		our_turf.assume_air(gas_used)
 		to_chat(user, span_warning("\The [src]'s piston-ram lets out a weak hiss, it needs more gas!"))
-		playsound(loc, 'sound/weapons/punch4.ogg', 50, TRUE)
+		playsound(loc, 'sound/items/weapons/punch4.ogg', 50, TRUE)
 		target.apply_damage((force / 2), BRUTE)
 		target.visible_message(span_danger("[user]'s powerfist lets out a weak hiss as [user.p_they()] punch[user.p_es()] [target.name]!"), \
 			span_userdanger("[user]'s punch strikes with force!"))
@@ -123,8 +136,8 @@
 		span_userdanger("You cry out in pain as [user]'s punch flings you backwards!"))
 	new /obj/effect/temp_visual/kinetic_blast(target.loc)
 	target.apply_damage(force * fist_pressure_setting, BRUTE, wound_bonus = CANT_WOUND)
-	playsound(src, 'sound/weapons/resonator_blast.ogg', 50, TRUE)
-	playsound(src, 'sound/weapons/genhit2.ogg', 50, TRUE)
+	playsound(src, 'sound/items/weapons/resonator_blast.ogg', 50, TRUE)
+	playsound(src, 'sound/items/weapons/genhit2.ogg', 50, TRUE)
 
 	if(!QDELETED(target))
 		var/atom/throw_target = get_edge_target_turf(target, get_dir(src, get_step_away(target, src)))

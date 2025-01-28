@@ -35,7 +35,10 @@
 	var/list/tmp_gaslist = GLOB.gaslist_cache[gas_id]; out_list[gas_id] = tmp_gaslist.Copy();
 
 ///Adds a gas to a gas mixture but checks if is already present, faster than the same proc
-#define ASSERT_GAS(gas_id, gas_mixture) if (!gas_mixture.gases[gas_id]) { ADD_GAS(gas_id, gas_mixture.gases) };
+#define ASSERT_GAS(gas_id, gas_mixture) ASSERT_GAS_IN_LIST(gas_id, gas_mixture.gases)
+
+///Adds a gas to a gas LIST but checks if is already present, accepts a list instead of a datum, so faster if the list is locally cached
+#define ASSERT_GAS_IN_LIST(gas_id, gases) if (!gases[gas_id]) { ADD_GAS(gas_id, gases) };
 
 //prefer this to gas_mixture/total_moles in performance critical areas
 ///Calculate the total moles of the gas mixture, faster than the proc, good for performance critical areas
@@ -50,13 +53,13 @@ GLOBAL_LIST_INIT(nonoverlaying_gases, typecache_of_gases_with_no_overlays())
 #define GAS_OVERLAYS(gases, out_var, z_layer_turf)\
 	do { \
 		out_var = list();\
-		var/offset = GET_TURF_PLANE_OFFSET(z_layer_turf);\
+		var/offset = GET_TURF_PLANE_OFFSET(z_layer_turf) + 1;\
 		for(var/_ID in gases){\
 			if(GLOB.nonoverlaying_gases[_ID]) continue;\
 			var/_GAS = gases[_ID];\
 			var/_GAS_META = _GAS[GAS_META];\
 			if(_GAS[MOLES] <= _GAS_META[META_GAS_MOLES_VISIBLE]) continue;\
-			var/_GAS_OVERLAY = _GAS_META[META_GAS_OVERLAY][offset + 1];\
+			var/_GAS_OVERLAY = _GAS_META[META_GAS_OVERLAY][offset];\
 			out_var += _GAS_OVERLAY[min(TOTAL_VISIBLE_STATES, CEILING(_GAS[MOLES] / MOLES_GAS_VISIBLE_STEP, 1))];\
 		} \
 	}\
@@ -79,7 +82,7 @@ GLOBAL_LIST_INIT(atmos_adjacent_savings, list(0,0))
 	turf.archived_cycle = SSair.times_fired;\
 	turf.temperature_archived = turf.temperature;
 
-/* Fetch the energy transferred when two gas mixtures's temperature equalize.
+/* Fetch the energy transferred when two gas mixtures' temperature equalize.
  *
  * To equalize two gas mixtures, we simply pool the energy and divide it by the pooled heat capacity.
  * T' = (W1+W2) / (C1+C2)
@@ -104,7 +107,7 @@ GLOBAL_LIST_INIT(atmos_adjacent_savings, list(0,0))
  * Not immediately obvious, but saves us operation time.
  *
  * We put a lot of parentheses here because the numbers get really really big.
- * By prioritizing the division we try to tone the number down so we dont get overflows.
+ * By prioritizing the division we try to tone the number down so we don't get overflows.
  *
  * Arguments:
  * * temperature_delta: T2 - T1. [/datum/gas_mixture/var/temperature]

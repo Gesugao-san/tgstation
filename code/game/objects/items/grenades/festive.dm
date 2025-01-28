@@ -29,7 +29,7 @@
 	lit = TRUE
 	icon_state = "sparkler_on"
 	force = 6
-	hitsound = 'sound/items/welder.ogg'
+	hitsound = 'sound/items/tools/welder.ogg'
 	name = "lit [initial(name)]"
 	attack_verb_continuous = list("burns")
 	attack_verb_simple = list("burn")
@@ -39,8 +39,8 @@
 	playsound(src, 'sound/effects/fuse.ogg', 20, TRUE)
 	update_appearance()
 
-/obj/item/sparkler/process(delta_time)
-	burntime -= delta_time
+/obj/item/sparkler/process(seconds_per_tick)
+	burntime -= seconds_per_tick
 	if(burntime <= 0)
 		new /obj/item/stack/rods(drop_location())
 		qdel(src)
@@ -92,7 +92,7 @@
 	if(det_time)
 		det_time -= 10
 		to_chat(user, span_notice("You shorten the fuse of [src] with [item]."))
-		playsound(src, 'sound/items/wirecutter.ogg', 20, TRUE)
+		playsound(src, 'sound/items/tools/wirecutter.ogg', 20, TRUE)
 		icon_state = initial(icon_state) + "_[det_time]"
 		update_appearance()
 	else

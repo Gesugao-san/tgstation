@@ -26,6 +26,9 @@
 	while(length(possible_locs))
 		var/turf/chosen_loc = get_turf(pick_n_take(possible_locs))
 		for(var/obj/machinery/sick_device in range(3, chosen_loc))
+			// Excludes machines that don't use power, as these are usually non-machine machinery
+			if(sick_device.use_power == NO_POWER_USE)
+				continue
 			// Look for dense machinery. Basically stops stuff like wall mounts and pipes, silly ones.
 			// But keep in vents and scrubbers. I think it's funny if they start spitting out radiation
 			if(!sick_device.density && !istype(sick_device, /obj/machinery/atmospherics/components/unary))
@@ -57,7 +60,7 @@
 
 	priority_announce("A radiation leak has been detected in [location_descriptor || "an unknown area"]. \
 		All crew are to evacuate the affected area. Our [pick("mechanics", "engineers", "scientists", "interns", "sensors", "readings")] \
-		report that a machine within is causing it - repair it quickly to stop the leak.")
+		report that a machine within is causing it - repair it quickly to stop the leak.", "[command_name()] Engineering Division")
 
 /datum/round_event/radiation_leak/start()
 	var/obj/machinery/the_source_of_our_problems = picked_machine_ref?.resolve()
@@ -150,7 +153,7 @@
 	SIGNAL_HANDLER
 
 	INVOKE_ASYNC(src, PROC_REF(try_remove_radiation), source, user, tool)
-	return COMPONENT_BLOCK_TOOL_ATTACK
+	return ITEM_INTERACT_BLOCKING
 
 /// Attempts a do_after, and if successful, stops the event
 /datum/round_event/radiation_leak/proc/try_remove_radiation(obj/machinery/source, mob/living/user, obj/item/tool)

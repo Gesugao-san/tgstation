@@ -16,7 +16,7 @@
 	add_fingerprint(user)
 	to_chat(user, span_notice("You pet [src]. You swear it looks up at you."))
 	owner = user
-	RegisterSignal(owner, COMSIG_PARENT_QDELETING, PROC_REF(owner_deleted))
+	RegisterSignal(owner, COMSIG_QDELETING, PROC_REF(owner_deleted))
 
 /obj/item/toy/plush/carpplushie/dehy_carp/plop(obj/item/toy/plush/Daddy)
 	return FALSE
@@ -62,6 +62,7 @@
 	//Make carp non-hostile to user
 	if(owner)
 		spawned_mob.faction = list("[REF(owner)]")
+		spawned_mob.grant_language(/datum/language/common, UNDERSTOOD_LANGUAGE, LANGUAGE_ATOM)
 	for(var/mob/living/viewer in viewers(5, get_turf(src)))
 		to_chat(viewer, viewer == owner ? span_notice("The newly grown [spawned_mob.name] looks up at you with friendly eyes.") : span_warning("You have a bad feeling about this."))
 	qdel(src)
@@ -69,5 +70,8 @@
 /obj/item/toy/plush/carpplushie/dehy_carp/proc/owner_deleted(datum/source)
 	SIGNAL_HANDLER
 
-	UnregisterSignal(owner, COMSIG_PARENT_QDELETING)
+	UnregisterSignal(owner, COMSIG_QDELETING)
 	owner = null
+
+/obj/item/toy/plush/carpplushie/dehy_carp/peaceful
+	mobtype = /mob/living/basic/carp/passive

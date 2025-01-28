@@ -8,10 +8,10 @@
 	lefthand_file = 'icons/mob/inhands/equipment/medical_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/equipment/medical_righthand.dmi'
 	resistance_flags = FLAMMABLE
-	drop_sound = 'sound/items/handling/cardboardbox_drop.ogg'
-	pickup_sound = 'sound/items/handling/cardboardbox_pickup.ogg'
+	drop_sound = 'sound/items/handling/cardboard_box/cardboardbox_drop.ogg'
+	pickup_sound = 'sound/items/handling/cardboard_box/cardboardbox_pickup.ogg'
 	/// What material do we get when we fold this box?
-	var/foldable = /obj/item/stack/sheet/cardboard
+	var/foldable_result = /obj/item/stack/sheet/cardboard
 	/// What drawing will we get on the face of the box?
 	var/illustration = "writing"
 
@@ -19,6 +19,8 @@
 	. = ..()
 	atom_storage.max_specific_storage = WEIGHT_CLASS_SMALL
 	update_appearance()
+	atom_storage.open_sound = 'sound/items/handling/cardboard_box/cardboard_box_open.ogg'
+	atom_storage.rustle_sound = 'sound/items/handling/cardboard_box/cardboard_box_rustle.ogg'
 
 /obj/item/storage/box/suicide_act(mob/living/carbon/user)
 	var/obj/item/bodypart/head/myhead = user.get_bodypart(BODY_ZONE_HEAD)
@@ -39,20 +41,15 @@
 /obj/item/storage/box/attack_self(mob/user)
 	..()
 
-	if(!foldable || (flags_1 & HOLOGRAM_1))
+	if(!foldable_result || (flags_1 & HOLOGRAM_1))
 		return
 	if(contents.len)
 		balloon_alert(user, "items inside!")
 		return
-	if(!ispath(foldable))
+	if(!ispath(foldable_result))
 		return
 
+	var/obj/item/result = new foldable_result(user.drop_location())
 	balloon_alert(user, "folded")
-	var/obj/item/I = new foldable
 	qdel(src)
-	user.put_in_hands(I)
-
-/obj/item/storage/box/attackby(obj/item/W, mob/user, params)
-	if(istype(W, /obj/item/stack/package_wrap))
-		return FALSE
-	return ..()
+	user.put_in_hands(result)

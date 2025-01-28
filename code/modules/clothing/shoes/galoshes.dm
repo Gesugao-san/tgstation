@@ -3,7 +3,7 @@
 	name = "galoshes"
 	icon_state = "galoshes"
 	inhand_icon_state = "galoshes"
-	clothing_flags = NOSLIP
+	clothing_traits = list(TRAIT_NO_SLIP_WATER)
 	slowdown = SHOES_SLOWDOWN+1
 	strip_delay = 30
 	equip_delay_other = 50
@@ -12,11 +12,18 @@
 	can_be_bloody = FALSE
 	custom_price = PAYCHECK_CREW * 3
 	can_be_tied = FALSE
+	///How much these boots affect fishing difficulty
+	var/fishing_modifier = -3
+
+/obj/item/clothing/shoes/galoshes/Initialize(mapload)
+	. = ..()
+	AddComponent(/datum/component/adjust_fishing_difficulty, fishing_modifier)
 
 /obj/item/clothing/shoes/galoshes/dry
 	name = "absorbent galoshes"
 	desc = "A pair of purple rubber boots, designed to prevent slipping on wet surfaces while also drying them."
 	icon_state = "galoshes_dry"
+	fishing_modifier = -6
 
 /datum/armor/shoes_galoshes
 	bio = 100

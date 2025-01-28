@@ -21,7 +21,7 @@
 /datum/element/organ_set_bonus/Detach(obj/item/organ/target)
 	UnregisterSignal(target, list(COMSIG_ORGAN_IMPLANTED, COMSIG_ORGAN_REMOVED))
 	if(target.owner)
-		UnregisterSignal(target.owner, COMSIG_PARENT_EXAMINE)
+		UnregisterSignal(target.owner, COMSIG_ATOM_EXAMINE)
 	return ..()
 
 /datum/element/organ_set_bonus/proc/on_implanted(obj/item/organ/target, mob/living/carbon/receiver)
@@ -42,8 +42,8 @@
 
 /datum/status_effect/organ_set_bonus
 	id = "organ_set_bonus"
-	duration = -1
-	tick_interval = -1
+	duration = STATUS_EFFECT_PERMANENT
+	tick_interval = STATUS_EFFECT_NO_TICK
 	alert_type = null
 	///how many organs the carbon with this has in the set
 	var/organs = 0
@@ -55,8 +55,16 @@
 	var/bonus_deactivate_text = span_notice("Your DNA is no longer majority ???. You did make an issue report, right?")
 	/// Required mob bio-type. Also checks DNA validity it's set to MOB_ORGANIC.
 	var/required_biotype = MOB_ORGANIC
-	/// A Trait or list of Traits added to the mob upon bonus activation.
-	var/bonus_traits
+	/// A list of traits added to the mob upon bonus activation, can be of any length.
+	var/list/bonus_traits = list()
+	/// Bonus biotype to add on bonus activation.
+	var/bonus_biotype
+	/// If the biotype was added - used to check if we should remove the biotype or not, on organ set loss.
+	var/biotype_added = FALSE
+	/// Limb overlay to apply upon activation
+	var/limb_overlay
+	/// Color priority for limb overlay
+	var/color_overlay_priority
 
 /datum/status_effect/organ_set_bonus/proc/set_organs(new_value)
 	organs = new_value
@@ -76,24 +84,50 @@
 		if((required_biotype == MOB_ORGANIC) && !owner.can_mutate())
 			return FALSE
 	bonus_active = TRUE
-	if(bonus_traits)
-		if(islist(bonus_traits))
-			for(var/trait in bonus_traits)
-				ADD_TRAIT(owner, trait, REF(src))
-		else
-			ADD_TRAIT(owner, bonus_traits, REF(src))
+	// Add traits
+	if(length(bonus_traits))
+		owner.add_traits(bonus_traits, REF(src))
+
+	// Add biotype
+	if(owner.mob_biotypes & bonus_biotype)
+		biotype_added = FALSE
+	owner.mob_biotypes |= bonus_biotype
+	biotype_added = TRUE
+
 	if(bonus_activate_text)
 		to_chat(owner, bonus_activate_text)
+
+	// Add limb overlay
+	if(!iscarbon(owner) || !limb_overlay)
+		return TRUE
+	var/mob/living/carbon/carbon_owner = owner
+	for(var/obj/item/bodypart/limb in carbon_owner.bodyparts)
+		limb.add_bodypart_overlay(new limb_overlay())
+		limb.add_color_override(COLOR_WHITE, color_overlay_priority)
+	carbon_owner.update_body()
 	return TRUE
 
 /datum/status_effect/organ_set_bonus/proc/disable_bonus()
 	SHOULD_CALL_PARENT(TRUE)
 	bonus_active = FALSE
-	if(bonus_traits)
-		if(islist(bonus_traits))
-			for(var/trait in bonus_traits)
-				REMOVE_TRAIT(owner, trait, REF(src))
-		else
-			REMOVE_TRAIT(owner, bonus_traits, REF(src))
+
+	// Remove traits
+	if(length(bonus_traits))
+		owner.remove_traits(bonus_traits, REF(src))
+	// Remove biotype (if added)
+	if(biotype_added)
+		owner.mob_biotypes &= ~bonus_biotype
+
 	if(bonus_deactivate_text)
 		to_chat(owner, bonus_deactivate_text)
+
+	// Remove limb overlay
+	if(!iscarbon(owner) || QDELETED(owner) || !limb_overlay)
+		return
+	var/mob/living/carbon/carbon_owner = owner
+	for(var/obj/item/bodypart/limb in carbon_owner.bodyparts)
+		var/overlay = locate(limb_overlay) in limb.bodypart_overlays
+		if(overlay)
+			limb.remove_bodypart_overlay(overlay)
+			limb.remove_color_override(color_overlay_priority)
+	carbon_owner.update_body()

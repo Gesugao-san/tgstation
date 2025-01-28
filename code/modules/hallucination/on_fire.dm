@@ -37,7 +37,6 @@
 	return ..()
 
 /datum/hallucination/fire/start()
-	hallucinator.set_fire_stacks(max(hallucinator.fire_stacks, 0.1)) //Placebo flammability
 	fire_overlay = image(fire_icon, hallucinator, fire_icon_state, ABOVE_MOB_LAYER)
 	hallucinator.client?.images |= fire_overlay
 	to_chat(hallucinator, span_userdanger("You're set on fire!"))
@@ -47,7 +46,6 @@
 	return TRUE
 
 /datum/hallucination/fire/Destroy()
-	hallucinator.adjust_fire_stacks(-0.1)
 	hallucinator.clear_alert(ALERT_FIRE, clear_override = TRUE)
 	hallucinator.clear_alert(ALERT_TEMPERATURE, clear_override = TRUE)
 	if(fire_overlay)
@@ -63,17 +61,17 @@
 
 	START_PROCESSING(SSfastprocess, src)
 
-/datum/hallucination/fire/process(delta_time)
+/datum/hallucination/fire/process(seconds_per_tick)
 	if(QDELETED(src))
 		return
 
 	if(hallucinator.fire_stacks <= 0)
 		clear_fire()
 
-	time_spent += delta_time
+	time_spent += seconds_per_tick
 
 	if(fire_clearing)
-		next_action -= delta_time
+		next_action -= seconds_per_tick
 		if(next_action < 0)
 			stage -= 1
 			update_temp()
@@ -89,7 +87,7 @@
 				increasing_stages = FALSE
 
 	else if(times_to_lower_stamina)
-		next_action -= delta_time
+		next_action -= seconds_per_tick
 		if(next_action < 0)
 			hallucinator.adjustStaminaLoss(15)
 			next_action += 2

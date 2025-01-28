@@ -6,7 +6,7 @@
 /datum/plant_gene/trait/anti_magic
 	name = "Anti-Magic Vacuoles"
 	description = "You can hide behind it from a fireball!"
-	icon = "hand-sparkles"
+	icon = FA_ICON_HAND_SPARKLES
 	/// The amount of anti-magic blocking uses we have.
 	var/shield_uses = 1
 
@@ -39,7 +39,7 @@
 /datum/plant_gene/trait/attack
 	name = "On Attack Trait"
 	description = "It is a very dangerous weapon."
-	icon = "hand-fist"
+	icon = FA_ICON_HAND_FIST
 	/// The multiplier we apply to the potency to calculate force. Set to 0 to not affect the force.
 	var/force_multiplier = 0
 	/// If TRUE, our plant will degrade in force every hit until diappearing.
@@ -76,24 +76,9 @@
 	return
 
 /// Signal proc for [COMSIG_ITEM_AFTERATTACK] that allows for effects after an attack is done
-/datum/plant_gene/trait/attack/proc/after_plant_attack(obj/item/source, atom/target, mob/user, proximity_flag, click_parameters)
+/datum/plant_gene/trait/attack/proc/after_plant_attack(obj/item/source, atom/target, mob/user, click_parameters)
 	SIGNAL_HANDLER
-
-	if(!proximity_flag)
-		return
-
-	if(!ismovable(target))
-		return
-
-	. |= COMPONENT_AFTERATTACK_PROCESSED_ITEM
-
-	if(isobj(target))
-		var/obj/object_target = target
-		if(!(object_target.obj_flags & CAN_BE_HIT))
-			return .
-
 	INVOKE_ASYNC(src, PROC_REF(after_attack_effect), source, target, user)
-	return .
 
 /*
  * Effects done when we hit people with our plant, AFTER the attack is done.
@@ -168,7 +153,7 @@
 /// Traits for plants with backfire effects. These are negative effects that occur when a plant is handled without gloves/unsafely.
 /datum/plant_gene/trait/backfire
 	name = "Backfire Trait"
-	icon = "mitten"
+	icon = FA_ICON_MITTEN
 	description = "Be careful when holding it without protection."
 	/// Whether our actions are cancelled when the backfire triggers.
 	var/cancel_action_on_backfire = FALSE
@@ -181,7 +166,10 @@
 	. = ..()
 	if(!.)
 		return
-
+	if(genes_to_check)
+		genes_to_check = string_list(genes_to_check)
+	if(traits_to_check)
+		traits_to_check = string_list(traits_to_check)
 	our_plant.AddElement(/datum/element/plant_backfire, cancel_action_on_backfire, traits_to_check, genes_to_check)
 	RegisterSignal(our_plant, COMSIG_PLANT_ON_BACKFIRE, PROC_REF(on_backfire))
 
@@ -212,8 +200,7 @@
 
 	to_chat(user, span_danger("[our_plant]'s thorns prick your hand. Ouch."))
 	our_plant.investigate_log("rose-pricked [key_name(user)] at [AREACOORD(user)]", INVESTIGATE_BOTANY)
-	var/obj/item/bodypart/affecting = user.get_active_hand()
-	affecting?.receive_damage(2)
+	user.apply_damage(2, BRUTE, user.get_active_hand())
 
 /// Novaflower's hand burn on backfire
 /datum/plant_gene/trait/backfire/novaflower_heat
@@ -224,8 +211,7 @@
 /datum/plant_gene/trait/backfire/novaflower_heat/backfire_effect(obj/item/our_plant, mob/living/carbon/user)
 	to_chat(user, span_danger("[our_plant] singes your bare hand!"))
 	our_plant.investigate_log("self-burned [key_name(user)] for [our_plant.force] at [AREACOORD(user)]", INVESTIGATE_BOTANY)
-	var/obj/item/bodypart/affecting = user.get_active_hand()
-	return affecting?.receive_damage(0, our_plant.force, wound_bonus = CANT_WOUND)
+	user.apply_damage(our_plant.force, our_plant.damtype, user.get_active_hand(), wound_bonus = CANT_WOUND)
 
 /// Normal Nettle hannd burn on backfire
 /datum/plant_gene/trait/backfire/nettle_burn
@@ -235,8 +221,7 @@
 /datum/plant_gene/trait/backfire/nettle_burn/backfire_effect(obj/item/our_plant, mob/living/carbon/user)
 	to_chat(user, span_danger("[our_plant] burns your bare hand!"))
 	our_plant.investigate_log("self-burned [key_name(user)] for [our_plant.force] at [AREACOORD(user)]", INVESTIGATE_BOTANY)
-	var/obj/item/bodypart/affecting = user.get_active_hand()
-	return affecting?.receive_damage(0, our_plant.force, wound_bonus = CANT_WOUND)
+	user.apply_damage(our_plant.force, our_plant.damtype, user.get_active_hand(), wound_bonus = CANT_WOUND)
 
 /// Deathnettle hand burn + stun on backfire
 /datum/plant_gene/trait/backfire/nettle_burn/death
@@ -267,7 +252,7 @@
 		return
 
 	our_chili = WEAKREF(our_plant)
-	RegisterSignals(our_plant, list(COMSIG_PARENT_QDELETING, COMSIG_ITEM_DROPPED), PROC_REF(stop_backfire_effect))
+	RegisterSignals(our_plant, list(COMSIG_QDELETING, COMSIG_ITEM_DROPPED), PROC_REF(stop_backfire_effect))
 
 /*
  * Begin processing the trait on backfire.
@@ -294,7 +279,7 @@
  * The processing of our trait. Heats up the mob ([held_mob]) currently holding the source plant ([our_chili]).
  * Stops processing if we're no longer being held by [held mob].
  */
-/datum/plant_gene/trait/backfire/chili_heat/process(delta_time)
+/datum/plant_gene/trait/backfire/chili_heat/process(seconds_per_tick)
 	var/mob/living/carbon/our_mob = held_mob?.resolve()
 	var/obj/item/our_plant = our_chili?.resolve()
 
@@ -303,8 +288,8 @@
 		stop_backfire_effect()
 		return
 
-	our_mob.adjust_bodytemperature(7.5 * TEMPERATURE_DAMAGE_COEFFICIENT * delta_time)
-	if(DT_PROB(5, delta_time))
+	our_mob.adjust_bodytemperature(7.5 * TEMPERATURE_DAMAGE_COEFFICIENT * seconds_per_tick)
+	if(SPT_PROB(5, seconds_per_tick))
 		to_chat(our_mob, span_warning("Your hand holding [our_plant] burns!"))
 
 /// Bluespace Tomato squashing on the user on backfire
@@ -328,7 +313,7 @@
 /datum/plant_gene/trait/mob_transformation
 	name = "Dormant Ferocity"
 	description = "It comes to life when shaken in hand."
-	icon = "heart-pulse"
+	icon = FA_ICON_HEART_PULSE
 	trait_ids = ATTACK_SELF_ID
 	/// Whether mobs spawned by this trait are dangerous or not.
 	var/dangerous = FALSE
@@ -439,6 +424,15 @@
 		spawned_simplemob.melee_damage_lower += round(our_seed.potency * mob_melee_multiplier)
 		spawned_simplemob.melee_damage_upper += round(our_seed.potency * mob_melee_multiplier)
 		spawned_simplemob.move_to_delay -= round(our_seed.production * mob_speed_multiplier)
+
+	if(isbasicmob(spawned_mob))
+		var/mob/living/basic/spawned_basicmob = spawned_mob
+		spawned_basicmob.melee_damage_lower += round(our_seed.potency * mob_melee_multiplier)
+		spawned_basicmob.melee_damage_upper += round(our_seed.potency * mob_melee_multiplier)
+		// basic mob speeds aren't exactly equivalent to simple animal's "move to delay" but this seems balanced enough.
+		var/calculated_speed = initial(spawned_basicmob.speed) - round((our_seed.production * mob_speed_multiplier), 0.01)
+		spawned_basicmob.set_varspeed(calculated_speed)
+
 	our_plant.forceMove(our_plant.drop_location())
 	spawned_mob.visible_message(span_notice("[our_plant] growls as it suddenly awakens!"))
 	qdel(our_plant)
@@ -446,14 +440,14 @@
 /// Killer Tomato's transformation gene.
 /datum/plant_gene/trait/mob_transformation/tomato
 	dangerous = TRUE
-	killer_plant = /mob/living/simple_animal/hostile/killertomato
+	killer_plant = /mob/living/basic/killer_tomato
 	mob_health_multiplier = 0.33
 	mob_melee_multiplier = 0.1
 	mob_speed_multiplier = 0.02
 
 /// Walking Mushroom's transformation gene
 /datum/plant_gene/trait/mob_transformation/shroom
-	killer_plant = /mob/living/simple_animal/hostile/mushroom
+	killer_plant = /mob/living/basic/mushroom
 	mob_health_multiplier = 0.25
 	mob_melee_multiplier = 0.05
 	mob_speed_multiplier = 0.02
@@ -462,7 +456,7 @@
 /datum/plant_gene/trait/one_bite
 	name = "Large Bites"
 	description = "You can't hold off from eating this in one bite!"
-	icon = "drumstick-bite"
+	icon = FA_ICON_DRUMSTICK_BITE
 
 /datum/plant_gene/trait/one_bite/on_new_plant(obj/item/our_plant, newloc)
 	. = ..()
@@ -476,8 +470,8 @@
 /// Traits for plants with a different base max_volume.
 /datum/plant_gene/trait/modified_volume
 	name = "Deep Vesicles"
-	description = "It has more reagents than usual."
-	icon = "vials"
+	description = "It has extra reagent volume."
+	icon = FA_ICON_VIALS
 	/// The new number we set the plant's max_volume to.
 	var/new_capcity = 100
 
@@ -493,18 +487,21 @@
 /// Omegaweed's funny 420 max volume gene
 /datum/plant_gene/trait/modified_volume/omega_weed
 	name = "Dank Vesicles"
+	description = "It can hold up to 420 units of reagents."
+	icon = FA_ICON_CANNABIS
 	new_capcity = 420
 
 /// Cherry Bomb's increased max volume gene
 /datum/plant_gene/trait/modified_volume/cherry_bomb
 	name = "Powder-Filled Bulbs"
+	description = "It can hold up to 125 units of reagents."
 	new_capcity = 125
 
 /// Plants that explode when used (based on their reagent contents)
 /datum/plant_gene/trait/bomb_plant
 	name = "Explosive Contents"
 	description = "Don't shake it, the contents may explode."
-	icon = "bomb"
+	icon = FA_ICON_BOMB
 	trait_ids = ATTACK_SELF_ID
 
 /datum/plant_gene/trait/bomb_plant/on_new_plant(obj/item/our_plant, newloc)
@@ -596,7 +593,7 @@
 	else
 		our_plant.color = COLOR_RED
 
-	playsound(our_plant.drop_location(), 'sound/weapons/armbomb.ogg', 75, TRUE, -3)
+	playsound(our_plant.drop_location(), 'sound/items/weapons/armbomb.ogg', 75, TRUE, -3)
 	addtimer(CALLBACK(src, PROC_REF(detonate), our_plant), rand(1 SECONDS, 6 SECONDS))
 
 /datum/plant_gene/trait/bomb_plant/potency_based/detonate(obj/item/our_plant)
@@ -612,7 +609,7 @@
 /datum/plant_gene/trait/gas_production
 	name = "Miasma Gas Production"
 	description = "This plant stinks when grown."
-	icon = "wind"
+	icon = FA_ICON_WIND
 	/// The location of our tray, if we have one.
 	var/datum/weakref/home_tray
 	/// The seed emitting gas.
@@ -621,11 +618,11 @@
 /datum/plant_gene/trait/gas_production/on_new_seed(obj/item/seeds/new_seed)
 	RegisterSignal(new_seed, COMSIG_SEED_ON_PLANTED, PROC_REF(set_home_tray))
 	RegisterSignal(new_seed, COMSIG_SEED_ON_GROW, PROC_REF(try_release_gas))
-	RegisterSignal(new_seed, COMSIG_PARENT_QDELETING, PROC_REF(stop_gas))
+	RegisterSignal(new_seed, COMSIG_QDELETING, PROC_REF(stop_gas))
 	stinky_seed = WEAKREF(new_seed)
 
 /datum/plant_gene/trait/gas_production/on_removed(obj/item/seeds/old_seed)
-	UnregisterSignal(old_seed, list(COMSIG_PARENT_QDELETING, COMSIG_SEED_ON_PLANTED, COMSIG_SEED_ON_GROW))
+	UnregisterSignal(old_seed, list(COMSIG_QDELETING, COMSIG_SEED_ON_PLANTED, COMSIG_SEED_ON_GROW))
 	stop_gas()
 
 /*
@@ -664,7 +661,7 @@
 /*
  * If the conditions are acceptable and the potency is high enough, release miasma into the air.
  */
-/datum/plant_gene/trait/gas_production/process(delta_time)
+/datum/plant_gene/trait/gas_production/process(seconds_per_tick)
 	var/obj/item/seeds/seed = stinky_seed?.resolve()
 	var/obj/machinery/hydroponics/tray = home_tray?.resolve()
 
@@ -679,7 +676,7 @@
 
 	var/datum/gas_mixture/stank = new
 	ADD_GAS(/datum/gas/miasma, stank.gases)
-	stank.gases[/datum/gas/miasma][MOLES] = (seed.yield + 6) * 3.5 * MIASMA_CORPSE_MOLES * delta_time // this process is only being called about 2/7 as much as corpses so this is 12-32 times a corpses
+	stank.gases[/datum/gas/miasma][MOLES] = (seed.yield + 6) * 3.5 * MIASMA_CORPSE_MOLES * seconds_per_tick // this process is only being called about 2/7 as much as corpses so this is 12-32 times a corpses
 	stank.temperature = T20C // without this the room would eventually freeze and miasma mining would be easier
 	tray_turf.assume_air(stank)
 

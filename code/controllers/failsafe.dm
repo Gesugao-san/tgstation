@@ -4,6 +4,7 @@
  * Pretty much pokes the MC to make sure it's still alive.
  **/
 
+// See initialization order in /code/game/world.dm
 GLOBAL_REAL(Failsafe, /datum/controller/failsafe)
 
 /datum/controller/failsafe // This thing pretty much just keeps poking the master controller
@@ -15,7 +16,7 @@ GLOBAL_REAL(Failsafe, /datum/controller/failsafe)
 	// The alert level. For every failed poke, we drop a DEFCON level. Once we hit DEFCON 1, restart the MC.
 	var/defcon = 5
 	//the world.time of the last check, so the mc can restart US if we hang.
-	// (Real friends look out for *eachother*)
+	// (Real friends look out for *each other*)
 	var/lasttick = 0
 
 	// Track the MC iteration to make sure its still on track.
@@ -23,6 +24,9 @@ GLOBAL_REAL(Failsafe, /datum/controller/failsafe)
 	var/running = TRUE
 
 /datum/controller/failsafe/New()
+	// Ensure usr is null, to prevent any potential weirdness resulting from the failsafe having a usr if it's manually restarted.
+	usr = null
+
 	// Highlander-style: there can only be one! Kill off the old and replace it with the new.
 	if(Failsafe != src)
 		if(istype(Failsafe))
@@ -138,7 +142,7 @@ GLOBAL_REAL(Failsafe, /datum/controller/failsafe)
 	if (. == 1) //We were able to create a new master
 		master_iteration = 0
 		SSticker.Recover(); //Recover the ticket system so the Masters runlevel gets set
-		Master.Initialize(10, FALSE, TRUE) //Need to manually start the MC, normally world.new would do this
+		Master.Initialize(10, FALSE, FALSE) //Need to manually start the MC, normally world.new would do this
 		to_chat(GLOB.admins, span_adminnotice("Failsafe recovered MC while in emergency state [defcon_pretty()]"))
 	else
 		log_game("FailSafe: Failsafe in emergency state and was unable to recreate MC while in defcon state [defcon_pretty()].")
@@ -154,7 +158,7 @@ GLOBAL_REAL(Failsafe, /datum/controller/failsafe)
 	. = Recreate_MC()
 	if (. == 1) //We were able to create a new master
 		SSticker.Recover(); //Recover the ticket system so the Masters runlevel gets set
-		Master.Initialize(10, FALSE, TRUE) //Need to manually start the MC, normally world.new would do this
+		Master.Initialize(10, FALSE, FALSE) //Need to manually start the MC, normally world.new would do this
 		to_chat(GLOB.admins, span_adminnotice("MC successfully recreated after recovering all subsystems!"))
 	else
 		message_admins(span_boldannounce("Failed to create new MC!"))
@@ -168,7 +172,7 @@ GLOBAL_REAL(Failsafe, /datum/controller/failsafe)
 	. = Recreate_MC()
 	if (. == 1) //We were able to create a new master
 		SSticker.Recover(); //Recover the ticket system so the Masters runlevel gets set
-		Master.Initialize(10, FALSE, TRUE) //Need to manually start the MC, normally world.new would do this
+		Master.Initialize(10, FALSE, FALSE) //Need to manually start the MC, normally world.new would do this
 		to_chat(GLOB.admins, span_adminnotice("MC successfully recreated after deleting and recreating all subsystems!"))
 	else
 		message_admins(span_boldannounce("Failed to create new MC!"))

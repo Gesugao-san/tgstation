@@ -104,7 +104,29 @@
 /datum/crafting_recipe/food/energypizza
 	reqs = list(
 		/obj/item/food/flatdough = 1,
-		/obj/item/stock_parts/cell = 2,
+		/obj/item/stock_parts/power_store/cell = 2,
 	)
 	result = /obj/item/food/pizza/energy/raw
+	category = CAT_PIZZA
+
+/datum/crafting_recipe/food/raw_meat_calzone
+	name = "Meat calzone"
+	reqs = list(
+		/obj/item/food/flatdough = 1,
+		/obj/item/food/cheese/wedge = 2,
+		/obj/item/food/meat/rawcutlet = 3,
+		/obj/item/food/grown/tomato = 1,
+	)
+	result = /obj/item/food/raw_meat_calzone
+	category = CAT_PIZZA
+
+/datum/crafting_recipe/food/raw_vegetarian_calzone
+	name = "Vegetarian calzone"
+	reqs = list(
+		/obj/item/food/flatdough = 1,
+		/obj/item/food/grown/tomato = 1,
+		/obj/item/food/grown/cabbage = 1,
+		/obj/item/food/grown/onion = 1,
+	)
+	result = /obj/item/food/raw_vegetarian_calzone
 	category = CAT_PIZZA

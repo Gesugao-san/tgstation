@@ -1,9 +1,9 @@
-/mob/living/carbon/alien/Life(delta_time = SSMOBS_DT, times_fired)
+/mob/living/carbon/alien/Life(seconds_per_tick = SSMOBS_DT, times_fired)
 	findQueen()
 	return..()
 
 /mob/living/carbon/alien/check_breath(datum/gas_mixture/breath)
-	if(status_flags & GODMODE)
+	if(HAS_TRAIT(src, TRAIT_GODMODE))
 		return
 
 	if(!breath || (breath.total_moles() == 0))
@@ -41,6 +41,6 @@
 	//BREATH TEMPERATURE
 	handle_breath_temperature(breath)
 
-/mob/living/carbon/alien/adult/Life(delta_time, times_fired)
+/mob/living/carbon/alien/adult/Life(seconds_per_tick, times_fired)
 	. = ..()
-	handle_organs(delta_time, times_fired)
+	handle_organs(seconds_per_tick, times_fired)
